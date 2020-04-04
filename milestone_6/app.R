@@ -1,4 +1,10 @@
 
+# I had to do some work in order to get some of my data in working order from
+# last milestone. One of the problems I experienced was that I couldn't plot
+# some of the data becase everything was a character variable. With June's 
+# advice, I decided to read in my data in two chunks - one for numeric and one
+# for character. Then I used cbind to take the two chunks and put them
+# together, which solved the problem.
 
 library(shiny)
 
