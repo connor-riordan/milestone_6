@@ -1,0 +1,342 @@
+---
+title: "milestone_6"
+author: "Connor Riordan"
+date: "4/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(gt)
+library(scales)
+library(markdown)
+```
+
+```{r, include = FALSE}
+
+# In this data, I decided to use head() and gt() in order to make the data look
+# nice when knitting.
+
+```
+
+## Voting Age by Region 2016
+
+```{r, age_by_region_voting_2016, echo = FALSE, message=FALSE, warning=FALSE}
+
+# For this milestone, I didn't do much with this data because I have a question
+# that I need to ask my TF, June, before I proceed with my data.
+
+age_by_region_voting_2016 <- read_xlsx("Raw-data/age_by_region_voting_2016.xlsx", skip = 6) %>%
+  clean_names()
+
+age_by_region_voting_2016_revised <- age_by_region_voting_2016 %>%
+  rename("Region" = x1,
+         "Region Part" = x2,
+         "Age" = x3, 
+         "Total Population" = x4,
+         "Total Citizen Population" = x5,
+         "Reported Registered (Number)" = number_6,
+         "Reported Registered (Percent)" = percent_7,
+         "Reported Not Registered (Number)" = number_8,
+         "Reported Not Registered (Percent)" = percent_9,
+         "No Response (Number)" = number_10,
+         "No Response (Percent)" = percent_11,
+         "Reported Voted (Number)" = number_12,
+         "Reported Voted (Percent)" = percent_13,
+         "Reported Not Voted (Number)" = number_14,
+         "Reported Not Voted (Percent)" = percent_15,
+         "No Response to Voting (Number)" = number_16,
+         "No Response to Voting (Percent)" = percent_17,
+         "Reported Registered" = percent_18,
+         "Reported Voted" = percent_19)
+
+northeast_total <- age_by_region_voting_2016_revised %>%
+  select(-c(`Region`, `Region Part`)) %>%
+  slice(2:7)
+
+northeast_total_plot <- northeast_total %>%
+  ggplot(aes(Age, `Total Population`)) + geom_bar(stat = "identity")
+
+northeast_total_plot
+```
+
+## Age Characteristics of Voters 2018
+
+```{r, age_characteristics_voting_2018, echo = FALSE, message=FALSE, warning=FALSE}
+
+# With this data, I tried figuring out how to swithch the character/list 
+# variables to numeric so I would be able to plot them with ggplot. 
+# Unfortunately, this is another set of data where I have to ask June,
+# since as.numeric did not work. However, I did put it into a pretty
+# ggplot!
+
+# use col_types to specify what value you want your columns to be.
+
+age_characteristics_voting_2018_numeric <- read_xlsx("Raw-data/age_characteristics_voting_2018.xlsx", skip = 2, col_types = "numeric") %>%
+  clean_names() %>%
+  select(!c(state_abbreviation, state_name, congressional_district))
+
+age_characteristics_voting_2018_character <- read_xlsx("Raw-data/age_characteristics_voting_2018.xlsx", skip = 2, col_types = "text") %>%
+  clean_names() %>%
+  select(c(state_abbreviation, state_name, congressional_district))
+
+age_characteristics_voting_2018 <- cbind(age_characteristics_voting_2018_character, age_characteristics_voting_2018_numeric)%>%
+  drop_na() 
+
+state_total_voting_age_pop <- age_characteristics_voting_2018 %>%
+  ggplot(aes(x = state_name, y = citizen_voting_age_population)) + geom_col(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90))
+
+
+```
+## Unused (but needed) code
+
+%>%
+  rename("Total Voting Age Population (estimate)" = citizen_voting_age_population,
+         "Total Age 18-29 (estimate)" = age,
+         "Total Age 30-44 (estimate)" = x11,
+         "Total Age 45-64 (estimate)" = x15,
+         "Total Age 65+ (estimate)" = x19,
+         "Margin of error (MOE)" = x6, 
+         "Margin of error (MOE) 18-29" = x8, 
+         "Margin of error (MOE) 30-44" = x12, 
+         "Margin of error (MOE) 45-64" = x16, 
+         "Margin of error (MOE)65+" = x20,
+         "Percent of total 18-29" = x9, 
+         "Percent of total 30-44" = x13, 
+         "Percent of total 45-64" = x17, 
+         "Percent of total 65+" = x21,
+         "Percent of total margin of error (MOE) 18-29" = x10, 
+         "Percent of total margin of error (MOE) 30-44" = x14, 
+         "Percent of total margin of error (MOE) 45-64" = x18, 
+         "Percent of total margin of error (MOE) 65+" = x22)
+
+
+
+
+
+age_characteristics_voting_2018_revised %>%
+  cols_merge(columns = vars(state_name, congressional_district),
+             pattern = "{1}&mdash;{2}") %>%
+  cols_hide(columns = vars(line_number, state_abbreviation)) %>%
+  cols_label(state_name = "State and Congressional District")
+
+
+## Civic Education Requirements by State
+
+```{r, civic_education_requirements_by_state, echo = FALSE, message=FALSE, warning=FALSE}
+
+# I still need to figue out what I want to do with this data - possibly a join,
+# perhaps I'll keep it in a gt() table, I am not sure. Unfortunately, this is
+# not the kind of data that I want to put into a ggplot because it looks ugly.
+
+civic_education_requirements_by_state <- read_csv("Raw-data/civic_education_requirements_by_state.csv") %>%
+  clean_names()
+
+civic_education_requirements_by_state_revised <- civic_education_requirements_by_state %>%
+  select(-"notes") %>%
+  gt()
+
+civic_education_requirements_by_state_revised
+
+```
+
+## Votes Cast by Voting Age 2018
+
+```{r, votes_cast_voting_age_2018, echo = FALSE, message=FALSE, warning=FALSE}
+
+# For this milestone, I took the data and put it into three separate ggplots -
+# one for the entire US by state abbreviation, one for just the congressional
+# districts of Alabama, and one for the congressional districts of Alaska.
+# The plots look beautiful, if I do say so myself. This is what I want to do 
+# for every state, although hopefully there will be a way to replicate the
+# process that is not as time-consuming and painful.
+
+votes_cast_voting_age_2018_numeric <- read_xlsx("Raw-data/votes_cast_voting_age_2018.xlsx", col_types = "numeric", skip = 2) %>%
+  clean_names() %>%
+  select(!c(state_abbreviation, state_name, congressional_district))
+
+votes_cast_voting_age_2018_character <- read_xlsx("Raw-data/votes_cast_voting_age_2018.xlsx", col_types = "text", skip = 2) %>%
+  clean_names() %>%
+  select(c(state_abbreviation, state_name, congressional_district))
+
+votes_cast_voting_age_2018 <- cbind(votes_cast_voting_age_2018_character, votes_cast_voting_age_2018_numeric) %>%
+  drop_na()
+
+votes_cast_voting_age_2018_revised <- votes_cast_voting_age_2018 %>%
+  select(-line_number) %>%
+  drop_na() %>%
+  rename("Votes Cast" = votes_cast_for_congressional_representative_for_the_november_6_2018_election1, 
+         "Number of Eligible Citizens (Estimate)" = citizen_voting_age_population2,
+         "Margin of Error for Eligible Citizens" = x7,
+         "Voting Rate" = voting_rate3,
+         "Margin of Error for Voting Rate" = x9)
+
+by_abbreviation <- votes_cast_voting_age_2018_revised %>%
+  ggplot(aes(state_abbreviation, `Votes Cast`)) + geom_bar(stat = "identity") +
+  labs(
+    title = "Votes Cast by Voting Age 2018",
+    x = "State (Abbreviated)"
+  ) +
+  scale_y_continuous(labels = comma) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90))
+
+by_abbreviation
+
+
+by_congressional_district_AL <- votes_cast_voting_age_2018_revised %>%
+  filter(state_name == "Alabama") %>%
+  ggplot(aes(congressional_district, `Votes Cast`)) + geom_bar(stat = "identity") +
+  labs(
+    title = "Votes Cast by Voting Age 2018",
+    subtitle = "Alabama"
+  ) +
+  scale_y_continuous(labels = comma) +
+  theme_bw()
+
+by_congressional_district_AL
+
+by_congressional_district_AK <- votes_cast_voting_age_2018_revised %>%
+  filter(state_name == "Alaska") %>%
+  ggplot(aes(congressional_district, `Votes Cast`)) + geom_bar(stat = "identity", width = 0.5) +
+  labs(
+    title = "Votes Cast by Voting Age 2018",
+    subtitle = "Alaska"
+  ) +
+  scale_y_continuous(labels = comma) +
+  theme_bw()
+
+by_congressional_district_AK
+
+```
+
+## Recorded Voting by Age 2016
+
+```{r, recorded_voting_by_age_2016, echo = FALSE, message=FALSE, warning=FALSE}
+
+# Like the data before this one, I wanted to divide this by both the US
+# and by each state so we can examine the age groups from all of these separate
+# samples. I hope to replicate the plot for every state that is included in the
+# data set, once again hopefully finding a way to do this without typing out
+# the same code time and again.
+
+recorded_voting_by_age_2016 <- read_xlsx("Raw-data/recorded_voting_by_age_2016.xlsx", skip = 2) %>%
+  clean_names()
+
+recorded_voting_by_age_2016_revised <- recorded_voting_by_age_2016 %>%
+  rename("State" = in_thousands,
+         "Age" = x2,
+         "Total Population" = x3,
+         "Total Citizen Population" = x4,
+         "Total Registered" = x5,
+         "Total Registered (Percent)" = x6,
+         "Margin of Error (MOE)" = x7,
+         "Percent Registered (Citizen)" = x8,
+         "MOE" = x9,
+         "Total Voted" = x10,
+         "Total Voted (Percent)" = x11,
+         "MOE_3" = x12,
+         "Percent Voted (Citizen)" = x13,
+         "MOE_4" = x14)
+
+
+US <- recorded_voting_by_age_2016_revised %>%
+  select(-State) %>%
+  slice(4:8)
+
+US_recorded_voting_by_age <- US %>%
+  ggplot(aes(Age, `Total Population`)) + geom_bar(stat = "identity") +
+  labs(
+    title = "Recorded Voting by Age 2016",
+    subtitle = "United States"
+  ) +
+  theme_bw()
+
+US_recorded_voting_by_age
+
+Alabama <- recorded_voting_by_age_2016_revised %>%
+  select(-State) %>%
+  slice(8:12)
+
+Alabama_recorded_voting_by_age <- Alabama %>%
+  ggplot(aes(Age, `Total Population`)) + geom_bar(stat = "identity") +
+  labs(
+    title = "Recorded Voting by Age 2016",
+    subtitle = "Alabama"
+  ) +
+  theme_bw()
+
+Alabama_recorded_voting_by_age
+
+```
+
+
+```{r, voting_by_age_sex_nov_2018, echo = FALSE, message = FALSE, error = FALSE}
+
+# This is more data that I wanted to include in my project. I think it's
+# important to include as much voting information as possible from a number
+# of different years so it is possible to compare voting patterns and map
+# civic education to those patterns. With this data I also had a paroblem
+# turning character variables into numeric variables so I am hoping June
+# will be able to assist me with that as well.
+
+v <- read_xlsx("Raw-data/voting_by_age_sex_nov_2018.xlsx")
+
+voting_by_age_sex_nov_2018_numeric <- read_xlsx("Raw-data/voting_by_age_sex_nov_2018.xlsx", col_types = "numeric") %>%
+  clean_names() %>%
+  select(!c("table_with_row_headers_in_columns_a_and_b_and_column_headers_in_rows_5_through_7", "x2"))
+
+voting_by_age_sex_nov_2018_character <- read_xlsx("Raw-data/voting_by_age_sex_nov_2018.xlsx", col_types = "text") %>%
+  clean_names() %>%
+  select("x2")
+
+voting_by_age_sex_nov_2018 <- cbind(voting_by_age_sex_nov_2018_character, voting_by_age_sex_nov_2018_numeric) %>%
+  drop_na()
+
+voting_by_age_sex_nov_2018_revised <- voting_by_age_sex_nov_2018 %>%
+  rename(
+    "Age" = x2,
+    "Total Population" = x3,
+    "Total Citizen Population" = x4,
+    "Reported Registered" = x5,
+    "Percent Recorded Registered" = x6,
+    "Recorded Not Registered" = x7,
+    "Percent Recorded Not Registered" = x8,
+    "No Response to Registration" = x9,
+    "Percent No Response to Registration" = x10,
+    "Reported Voted" = x11,
+    "Percent Reported Voted" = x12,
+    "Reported Not Voted" = x13,
+    "Percent Reported Not Voted" = x14,
+    "No Response to Voted" = x15,
+    "Percent No Response to Voted" = x16,
+    "Total Reported Registered Percent" = x17,
+    "Total Voted Percent" = x18
+  )
+
+
+voting_by_age_sex_nov_2018 %>%
+  ggplot(aes(x2, x3)) + geom_bar(stat = "identity") +
+  labs(
+    title = "Voting by Age for Both Sexes",
+    subtitie = "Total Population",
+    x = "Age Group",
+    y = "Population"
+  ) + theme_bw() + theme(axis.text.x = element_text(angle = 90))
+
+
+```
+
+
+
+
+
+
+
+
+
