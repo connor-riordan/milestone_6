@@ -7,6 +7,8 @@
 # together, which solved the problem.
 
 library(shiny)
+library(tidyverse)
+library(markdown)
 
 # Underneath library(), I used to have all of my code from my RMD from 
 # milestone 5 that gave me all the votes_cast data. I talked with one of the
